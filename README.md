@@ -3,7 +3,7 @@ Separate audio and video research into different folders
 Build the conda environment from visual.yml 
 
 ```
-conda create --name finRL python=3.10 -y
+conda create --name visual python=3.10 -y
 ```
 
 ```
