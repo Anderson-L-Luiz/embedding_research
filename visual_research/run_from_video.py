@@ -12,8 +12,9 @@ from sentence_transformers import SentenceTransformer, util
 # ----------------------------------------------------------------------------------
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
-# Load SentenceTransformer model for CLIP embeddings.
-clip_model = SentenceTransformer('clip-ViT-B-32')
+# Load the SentenceTransformer model for CLIP embeddings.
+# Using "openai/clip-vit-base-patch32" instead of "clip-ViT-B-32"
+clip_model = SentenceTransformer('openai/clip-vit-base-patch32')
 
 # Load the Llama-4 model and its processor.
 llama_model_id = "meta-llama/Llama-4-Maverick-17B-128E-Instruct"
@@ -25,7 +26,7 @@ llama_model = Llama4ForConditionalGeneration.from_pretrained(
     torch_dtype=torch.bfloat16,
 )
 
-# Load the Whisper model (choose size: "base", "small", etc.)
+# Load the Whisper model (choose a size: "base", "small", etc.)
 whisper_model = whisper.load_model("base")
 
 # ----------------------------------------------------------------------------------
@@ -36,7 +37,7 @@ video_path = "ee_33.mp4"  # UPDATE this with your video file path
 # ----------------------------------------------------------------------------------
 # Step 1: Transcribe Audio from the Video using Whisper
 # ----------------------------------------------------------------------------------
-# Whisper extracts the audio track directly from the video.
+# Whisper can process the video file directly (it extracts the audio track).
 whisper_result = whisper_model.transcribe(video_path)
 transcript = whisper_result["text"]
 print("Transcript:\n", transcript)
@@ -44,7 +45,7 @@ print("Transcript:\n", transcript)
 # ----------------------------------------------------------------------------------
 # Step 2: Generate a Summary Using Llama-4
 # ----------------------------------------------------------------------------------
-# Construct a chat message instructing Llama-4 to summarize the transcript.
+# Build a chat message instructing Llama-4 to summarize the transcript.
 messages = [
     {
         "role": "user",
@@ -57,6 +58,7 @@ messages = [
     },
 ]
 
+# Process the message into inputs for Llama-4.
 llama_inputs = llama_processor.apply_chat_template(
     messages,
     add_generation_prompt=True,
@@ -65,6 +67,7 @@ llama_inputs = llama_processor.apply_chat_template(
     return_tensors="pt",
 ).to(llama_model.device)
 
+# Generate the summary.
 llama_outputs = llama_model.generate(
     **llama_inputs,
     max_new_tokens=256,
@@ -75,8 +78,10 @@ reference_summary = llama_processor.batch_decode(
 print("\nSummary:\n", reference_summary)
 
 # ----------------------------------------------------------------------------------
-# Step 3: Compute CLIP Text Embedding for the Reference Summary using SentenceTransformer
+# Step 3: Compute CLIP Text Embedding for the Reference Summary
 # ----------------------------------------------------------------------------------
+# Use the SentenceTransformer model to encode the summary text.
+# The parameter normalize_embeddings=True returns a normalized tensor.
 text_embedding = clip_model.encode([reference_summary], convert_to_tensor=True, normalize_embeddings=True)
 
 # ----------------------------------------------------------------------------------
@@ -85,9 +90,10 @@ text_embedding = clip_model.encode([reference_summary], convert_to_tensor=True, 
 def extract_frames(video_path, sample_rate=60):
     """
     Extract frames from the video at a given sampling rate (in seconds).
+
     Args:
         video_path (str): Path to the video file.
-        sample_rate (float): Number of seconds between frames to sample.
+        sample_rate (float): Seconds between frames to sample.
     Returns:
         list: List of PIL Image frames.
     """
@@ -123,7 +129,7 @@ frames = extract_frames(video_path, sample_rate=60)
 # ----------------------------------------------------------------------------------
 image_embeddings = []
 for frame in frames:
-    # Encode each frame using SentenceTransformer (CLIP) model.
+    # Encode each frame with SentenceTransformer.
     img_emb = clip_model.encode(frame, convert_to_tensor=True, normalize_embeddings=True)
     image_embeddings.append(img_emb)
 
@@ -131,8 +137,8 @@ if len(image_embeddings) == 0:
     raise ValueError("No valid image embeddings were extracted from the video frames.")
 
 # Stack embeddings into a tensor and aggregate via mean pooling.
-image_embeddings = torch.stack(image_embeddings, dim=0)
-video_embedding = torch.mean(image_embeddings, dim=0)
+image_embeddings_tensor = torch.stack(image_embeddings, dim=0)
+video_embedding = torch.mean(image_embeddings_tensor, dim=0)
 video_embedding = video_embedding / video_embedding.norm()  # Ensure normalization
 
 # ----------------------------------------------------------------------------------
