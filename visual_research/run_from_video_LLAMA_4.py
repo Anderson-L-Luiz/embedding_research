@@ -1,7 +1,7 @@
 import os
 import torch
 import whisper
-from transformers import pipeline, AutoTokenizer
+from transformers import AutoTokenizer, Llama4ForConditionalGeneration
 from PIL import Image
 import cv2
 import numpy as np
@@ -15,16 +15,17 @@ device = "cuda" if torch.cuda.is_available() else "cpu"
 # Load SentenceTransformer model for CLIP embeddings.
 clip_model = SentenceTransformer('clip-ViT-B-32')
 
-# Setup the Llama-3.3 pipeline for text generation.
-llama_model_id = "meta-llama/Llama-3.3-70B-Instruct"
-llama_pipeline = pipeline(
-    "text-generation",
-    model=llama_model_id,
-    model_kwargs={"torch_dtype": torch.bfloat16},
+# Load the Llama-4 model and its tokenizer.
+llama_model_id = "meta-llama/Llama-4-Maverick-17B-128E-Instruct"
+llama_tokenizer = AutoTokenizer.from_pretrained(llama_model_id, use_fast=False)
+llama_model = Llama4ForConditionalGeneration.from_pretrained(
+    llama_model_id,
+    attn_implementation="flex_attention",
     device_map="auto",
+    torch_dtype=torch.bfloat16,
 )
 
-# Load the Whisper model (choose size: "base", "small", etc.)
+# Load the Whisper model (choose a size: "base", "small", etc.)
 whisper_model = whisper.load_model("base")
 
 # ----------------------------------------------------------------------------------
@@ -40,27 +41,35 @@ transcript = whisper_result["text"]
 print("Transcript:\n", transcript)
 
 # ----------------------------------------------------------------------------------
-# Step 2: Generate a Summary Using Llama-3.3 via a Text Prompt
+# Step 2: Generate a Summary Using Llama-4 via a Text Prompt
 # ----------------------------------------------------------------------------------
-# Construct messages for the pipeline.
-messages = [
-    {"role": "system", "content": "You are an assistant that summarizes transcripts."},
-    {"role": "user", "content": "Please provide a concise summary of the following transcript:\n\n" + transcript}
-]
+# Manually create a chat prompt that instructs the model to summarize the transcript.
+prompt = (
+    "Please provide a concise summary of the following transcript:\n\n"
+    + transcript
+    + "\n\nSummary:"
+)
 
-# Generate the summary using the pipeline.
-llama_outputs = llama_pipeline(messages, max_new_tokens=256)
-# Extract generated text from the first output.
-reference_summary = llama_outputs[0]["generated_text"]
+# Tokenize the prompt.
+inputs = llama_tokenizer(prompt, return_tensors="pt").to(llama_model.device)
+
+# Generate the summary.
+llama_outputs = llama_model.generate(**inputs, max_new_tokens=256)
+# Decode the response and remove the prompt if needed.
+response = llama_tokenizer.decode(llama_outputs[0], skip_special_tokens=True)
+# Post-process to extract the summary after the prompt.
+# Here we assume the summary follows the text "Summary:".
+if "Summary:" in response:
+    reference_summary = response.split("Summary:")[-1].strip()
+else:
+    reference_summary = response.strip()
+
 print("\nSummary:\n", reference_summary)
 
 # ----------------------------------------------------------------------------------
 # Step 3: Compute CLIP Text Embedding for the Reference Summary
 # ----------------------------------------------------------------------------------
-# Encode the summary text using SentenceTransformer.
-text_embedding = clip_model.encode(
-    [reference_summary], convert_to_tensor=True, normalize_embeddings=True
-)
+text_embedding = clip_model.encode([reference_summary], convert_to_tensor=True, normalize_embeddings=True)
 
 # ----------------------------------------------------------------------------------
 # Step 4: Extract Frames (Slides) from the Video
@@ -68,7 +77,7 @@ text_embedding = clip_model.encode(
 def extract_frames(video_path, sample_rate=60):
     """
     Extract frames from the video at a given sampling rate (in seconds).
-    
+
     Args:
         video_path (str): Path to the video file.
         sample_rate (float): Seconds between frames to sample.
@@ -112,7 +121,7 @@ for frame in frames:
 if len(image_embeddings) == 0:
     raise ValueError("No valid image embeddings were extracted from the video frames.")
 
-# Aggregate image embeddings via mean pooling.
+# Stack the embeddings into a tensor and aggregate them via mean pooling.
 image_embeddings_tensor = torch.stack(image_embeddings, dim=0)
 video_embedding = torch.mean(image_embeddings_tensor, dim=0)
 video_embedding = video_embedding / video_embedding.norm()  # Ensure normalization
