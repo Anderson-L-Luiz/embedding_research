@@ -24,6 +24,6 @@ python3 run_from_video_LLAMA_4.py
 
 ----------------
 
-Check the [PROPOSAL](./Proposal.md) if you are "reader type". Otherwise:
+Check the [proposal](./Proposal.md) if you are the "reader type". If you like it quick and dirty, take a look at the diagram:
 
 ![Diagram](./images/Proposal_diagram.png)
