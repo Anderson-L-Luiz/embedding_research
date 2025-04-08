@@ -1,0 +1,1 @@
+in the language, where in the word sequence are people interrupting. so i guess that one's actually easier. what about the idea of using a relational database to restore the information from the xml. so you could use xml as sort of transfer. the transfer format. but then you put it back in xml.

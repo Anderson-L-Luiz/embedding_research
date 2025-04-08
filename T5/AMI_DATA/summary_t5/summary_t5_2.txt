@@ -1,0 +1,1 @@
+and then also attached to it is an arbitrary vector of values. oh and it can take different types. so they don't all have to be floats. you know, you can have integers and you can have doubles and all that sort of stuff. that's not what i. right, and it has a header format that describes it to some extent. so they don't all have to be floats.
