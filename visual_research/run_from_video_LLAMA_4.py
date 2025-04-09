@@ -7,6 +7,7 @@ import cv2
 import numpy as np
 from sentence_transformers import SentenceTransformer, util
 
+os.environ["HF_HUB_TIMEOUT"] = "9999999" # Set a high timeout for Hugging Face Hub since llama 4 has a huge demand.
 # ----------------------------------------------------------------------------------
 # Setup Devices and Load Models
 # ----------------------------------------------------------------------------------
@@ -16,7 +17,8 @@ device = "cuda" if torch.cuda.is_available() else "cpu"
 clip_model = SentenceTransformer('clip-ViT-B-32')
 
 # Load the Llama-4 model and its tokenizer.
-llama_model_id = "meta-llama/Llama-4-Maverick-17B-128E-Instruct"
+#llama_model_id = "meta-llama/Llama-4-Maverick-17B-128E-Instruct"
+llama_model_id = "meta-llama/Llama-4-Scout-17B-16E-Instruct"
 llama_tokenizer = AutoTokenizer.from_pretrained(llama_model_id, use_fast=False)
 llama_model = Llama4ForConditionalGeneration.from_pretrained(
     llama_model_id,
