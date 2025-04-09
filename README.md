@@ -3,7 +3,7 @@ Separate audio and video research into different folders
 Build the conda environment from visual.yml 
 
 ```
-conda create --name visual python=3.10 -y
+conda env create -f visual.yaml
 ```
 
 ```
@@ -26,4 +26,4 @@ python3 run_from_video_LLAMA_4.py
 
 Check the [proposal](./Proposal.md) if you are the "reader type". If you like it quick and dirty, take a look at the diagram:
 
-![Diagram](./images/Proposal_diagram.png)
+![Diagram](./images/Diagram.svg)
