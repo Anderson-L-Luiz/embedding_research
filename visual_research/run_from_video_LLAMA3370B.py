@@ -6,6 +6,7 @@ from PIL import Image
 import cv2
 import numpy as np
 from sentence_transformers import SentenceTransformer, util
+import json
 
 # ----------------------------------------------------------------------------------
 # Setup Devices and Load Models
@@ -15,13 +16,13 @@ device = "cuda" if torch.cuda.is_available() else "cpu"
 # Load SentenceTransformer model for CLIP embeddings.
 clip_model = SentenceTransformer('clip-ViT-B-32')
 
-# Setup the Llama-3.3 pipeline for text generation.
+# Setup the LLaMA pipeline for text generation.
 llama_model_id = "meta-llama/Llama-3.3-70B-Instruct"
 llama_pipeline = pipeline(
     "text-generation",
     model=llama_model_id,
     model_kwargs={"torch_dtype": torch.bfloat16},
-    device_map="auto",
+    device_map="auto"
 )
 
 # Load the Whisper model (choose size: "base", "small", etc.)
@@ -40,24 +41,59 @@ transcript = whisper_result["text"]
 print("Transcript:\n", transcript)
 
 # ----------------------------------------------------------------------------------
-# Step 2: Generate a Summary Using Llama-3.3 via a Text Prompt
+# Step 2: Generate a Summary Using LLaMA via a Text Prompt
 # ----------------------------------------------------------------------------------
-# Construct messages for the pipeline.
 messages = [
     {"role": "system", "content": "You are an assistant that summarizes transcripts."},
     {"role": "user", "content": "Please provide a concise summary of the following transcript:\n\n" + transcript}
 ]
 
-# Generate the summary using the pipeline.
 llama_outputs = llama_pipeline(messages, max_new_tokens=256)
-# Extract generated text from the first output.
-reference_summary = llama_outputs[0]["generated_text"]
+
+# (Optional) Debug: print the raw LLAMA output structure
+# print("LLama Output:\n", json.dumps(llama_outputs[0], indent=2, ensure_ascii=False))
+
+def parse_generated_text(generated_text):
+    """
+    Helper function to robustly extract generated text.
+    It checks if generated_text is a string or a list of dicts
+    and tries common keys like 'generated_token' or 'text'.
+    """
+    if isinstance(generated_text, str):
+        return generated_text
+    if isinstance(generated_text, list):
+        parts = []
+        for token in generated_text:
+            if isinstance(token, dict):
+                # Check for common keys; adjust or add more if needed.
+                if 'generated_token' in token:
+                    parts.append(token['generated_token'])
+                elif 'text' in token:
+                    parts.append(token['text'])
+                else:
+                    parts.append(str(token))
+            else:
+                parts.append(str(token))
+        return " ".join(parts)
+    return str(generated_text)
+
+try:
+    generated_text_field = llama_outputs[0].get("generated_text")
+    generated_text = parse_generated_text(generated_text_field)
+except Exception as e:
+    raise ValueError("Unexpected format in generated_text: " + str(e))
+
+# Debug: print the parsed generated text if needed.
+# print("Parsed Generated Text:\n", generated_text)
+
+# Extract only the summary part by splitting the prompt.
+reference_summary = generated_text.split("Please provide a concise summary of the following transcript:")[-1].strip()
+
 print("\nSummary:\n", reference_summary)
 
 # ----------------------------------------------------------------------------------
 # Step 3: Compute CLIP Text Embedding for the Reference Summary
 # ----------------------------------------------------------------------------------
-# Encode the summary text using SentenceTransformer.
 text_embedding = clip_model.encode(
     [reference_summary], convert_to_tensor=True, normalize_embeddings=True
 )
@@ -98,7 +134,7 @@ def extract_frames(video_path, sample_rate=60):
     cap.release()
     return frames
 
-# Extract frames from the video (e.g., one frame every 60 seconds)
+# Extract frames (e.g., one frame every 60 seconds)
 frames = extract_frames(video_path, sample_rate=60)
 
 # ----------------------------------------------------------------------------------
@@ -115,7 +151,7 @@ if len(image_embeddings) == 0:
 # Aggregate image embeddings via mean pooling.
 image_embeddings_tensor = torch.stack(image_embeddings, dim=0)
 video_embedding = torch.mean(image_embeddings_tensor, dim=0)
-video_embedding = video_embedding / video_embedding.norm()  # Ensure normalization
+video_embedding = video_embedding / video_embedding.norm()  # Normalize
 
 # ----------------------------------------------------------------------------------
 # Step 6: Compute Cosine Similarity Between Text and Video Embeddings
