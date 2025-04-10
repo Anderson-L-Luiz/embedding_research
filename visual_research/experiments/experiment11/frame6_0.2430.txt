@@ -1,0 +1,1 @@
+Frame 6 cosine similarity: 0.2430

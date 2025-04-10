@@ -1,0 +1,8 @@
+The main technical points from the transcript are:
+- The circuit is identical to exercise number three, with the same values and the same moment of investigation.
+- The current I_L is given and the impedance and voltage at the coil L are calculated.
+- The partial currents and voltages are calculated using Ohm's law and the fact that the current I_L is real.
+- The phase angle between the current I_L, the total current I, and the total voltage U is determined using the phase difference between the imaginary and real parts of the voltage U.
+- The phase diagram is drawn, showing the relationship between the current I_L, the voltage U, and the current I_R at the resistance.
+- The voltage at the capacitance is calculated and found to lag 90 degrees behind the current I_L.
+- The total voltage U is calculated using the vector addition of the current I_L, the current I_R, and the voltage U at the capacitance.

@@ -1,0 +1,1 @@
+Frame 12 cosine similarity: 0.0632

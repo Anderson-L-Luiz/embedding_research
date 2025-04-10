@@ -1,0 +1,1 @@
+Frame 36 cosine similarity: 0.2633

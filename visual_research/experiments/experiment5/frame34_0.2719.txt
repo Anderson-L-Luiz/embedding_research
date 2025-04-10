@@ -1,0 +1,1 @@
+Frame 34 cosine similarity: 0.2719

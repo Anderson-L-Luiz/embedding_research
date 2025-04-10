@@ -1,0 +1,1 @@
+Frame 38 cosine similarity: 0.2284

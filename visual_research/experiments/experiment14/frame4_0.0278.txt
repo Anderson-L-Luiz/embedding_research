@@ -1,0 +1,1 @@
+Frame 4 cosine similarity: 0.0278

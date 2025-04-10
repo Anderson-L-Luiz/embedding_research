@@ -1,0 +1,1 @@
+Frame 19 cosine similarity: 0.0676

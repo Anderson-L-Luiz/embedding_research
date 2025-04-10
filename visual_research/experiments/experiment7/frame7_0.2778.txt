@@ -1,0 +1,1 @@
+Frame 7 cosine similarity: 0.2778

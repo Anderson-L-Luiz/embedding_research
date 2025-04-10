@@ -1,0 +1,1 @@
+Frame 3 cosine similarity: 0.2761

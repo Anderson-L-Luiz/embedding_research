@@ -1,0 +1,1 @@
+Frame 16 cosine similarity: 0.1075

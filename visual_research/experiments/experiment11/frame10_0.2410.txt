@@ -1,0 +1,1 @@
+Frame 10 cosine similarity: 0.2410

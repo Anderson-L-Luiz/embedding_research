@@ -1,0 +1,9 @@
+The main technical points from the transcript are:
+
+* The circuit is similar to exercise number three, but with a different starting point.
+* The current I_L is given as 2 amps.
+* The impedance at the coil set L is calculated as Chai Omega L, and the voltage U_L is calculated as Chai Omega L multiplied by the current I_L.
+* The partial current I_R is calculated as the voltage U_R divided by the resistance R.
+* The total current I is calculated as I_L plus I_R.
+* The phase shift between the total current I and the total voltage U is calculated as the initial phase VU minus the initial phase VI, which is given by 93.36 degrees minus 55 degrees.
+* The phase diagram is drawn, showing that the current I_L must be in the real axis pointing to the right, and the voltage at the resistance leads the current by 90 degrees.

@@ -19,7 +19,7 @@ clip_model = SentenceTransformer('clip-ViT-B-32')
 # Load the Llama-4 model and its tokenizer.
 #llama_model_id = "meta-llama/Llama-4-Maverick-17B-128E-Instruct"
 llama_model_id = "meta-llama/Llama-4-Scout-17B-16E-Instruct"
-llama_tokenizer = AutoTokenizer.from_pretrained(llama_model_id, use_fast=False)
+llama_tokenizer = AutoTokenizer.from_pretrained(llama_model_id, use_fast=True, force_download=True)
 llama_model = Llama4ForConditionalGeneration.from_pretrained(
     llama_model_id,
     attn_implementation="flex_attention",

@@ -1,0 +1,1 @@
+Frame 39 cosine similarity: 0.2122

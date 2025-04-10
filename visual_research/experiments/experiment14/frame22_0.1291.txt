@@ -1,0 +1,1 @@
+Frame 22 cosine similarity: 0.1291

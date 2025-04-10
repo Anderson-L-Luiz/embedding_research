@@ -79,7 +79,7 @@ text_embedding = clip_model.encode([reference_summary], convert_to_tensor=True, 
 # ----------------------------------------------------------------------------------
 # Step 4: Extract Frames from Video
 # ----------------------------------------------------------------------------------
-def extract_frames(video_path, sample_rate=60):
+def extract_frames(video_path, sample_rate=10):
     cap = cv2.VideoCapture(video_path)
     frames = []
     if not cap.isOpened():

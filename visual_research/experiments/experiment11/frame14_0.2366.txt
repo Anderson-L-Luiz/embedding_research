@@ -1,0 +1,1 @@
+Frame 14 cosine similarity: 0.2366
