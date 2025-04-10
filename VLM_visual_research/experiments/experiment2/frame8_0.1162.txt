@@ -1,0 +1,1 @@
+Frame 8 cosine similarity: 0.1162

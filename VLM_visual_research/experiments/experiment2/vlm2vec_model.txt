@@ -1,0 +1,2 @@
+Model Name: Qwen/Qwen2-VL-7B-Instruct
+Checkpoint Path: TIGER-Lab/VLM2Vec-Qwen2VL-7B
